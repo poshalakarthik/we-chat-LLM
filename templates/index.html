@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebWise AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="landing-page">
+        <h1>Welcome to WebWise AI Assistant</h1>
+        <p>Your intelligent companion for web-based information</p>
+        <button id="start-chat">Start Chatting</button>
+    </div>
+
+    <div id="chat-container" style="display: none;">
+        <div id="chat-header">
+            <h2><i class="fas fa-robot"></i> WebWise AI Assistant</h2>
+            <button id="minimize-chat"><i class="fas fa-minus"></i></button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input">
+            <input type="text" id="user-input" placeholder="Ask me anything...">
+            <button onclick="sendMessage()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#start-chat").click(function() {
+                $("#landing-page").fadeOut(function() {
+                    $("#chat-container").fadeIn();
+                });
+            });
+
+            $("#minimize-chat").click(function() {
+                $("#chat-container").fadeOut(function() {
+                    $("#landing-page").fadeIn();
+                });
+            });
+        });
+
+        function sendMessage() {
+            var userInput = $('#user-input').val();
+            if (userInput.trim() === '') return;
+        
+            $('#chat-messages').append('<div class="message user-message"><span class="avatar">👤</span><p>' + userInput + '</p></div>');
+            $('#user-input').val('');
+            $('#chat-messages').append('<div class="message bot-message"><span class="avatar">🤖</span><p>Thinking...</p></div>');
+        
+            $.ajax({
+                url: '/chat',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({message: userInput}),
+                success: function(response) {
+                    // Replace newline characters with <br> tags for HTML rendering
+                    var formattedResponse = response.response.replace(/\n/g, '<br>');
+                    $('.bot-message:last p').html(formattedResponse);
+                    $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+                },
+                error: function() {
+                    $('.bot-message:last p').html('Sorry, an error occurred. Please try again.');
+                }
+            });
+        }
+
+        $('#user-input').keypress(function(e) {
+            if (e.which == 13) {
+                sendMessage();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
